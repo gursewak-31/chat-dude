@@ -9,9 +9,8 @@ export async function signup(req: Request, res: Response, next: NextFunction){
             sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000
         });
-        res.status(200).json({success: true, msg: "User created successfully.", token: token});
+        res.status(200).json({success: true, msg: "User created successfully."});
     } catch (error) {
-        console.log(error);
         next(error);
     }
 }
@@ -24,7 +23,7 @@ export async function login(req: Request, res: Response, next: NextFunction){
             sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000
         });
-        res.status(200).json({success: true, msg: "User logged in successfully.", token: token});
+        res.status(200).json({success: true, msg: "User logged in successfully."});
     } catch (error) {
         next(error);
     }

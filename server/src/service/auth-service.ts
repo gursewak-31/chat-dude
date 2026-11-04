@@ -3,6 +3,7 @@ import { validateSignup, validateLogin } from "../utils/auth-utils.js";
 import * as dbActions from "../database/auth-db-actions.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import bcrypt from "bcrypt";
 import AppError from "../errors/app-errors.js";
 
 dotenv.config();
@@ -19,9 +20,17 @@ export async function signup(user: SignupUser){
         throw new AppError("JWT secret not defined.", 500);
     }
 
-    let insertedId = await dbActions.insertUser(user);
+    let existingUser = await dbActions.getUserByEmail(user.email);
 
-    let token = jwt.sign({id: insertedId}, secret);
+    if(existingUser){
+        throw new AppError("User with this email already exists.", 409);
+    }
+
+    let hashedPass = await bcrypt.hash(user.password, 12); // hash password with salt round 12
+
+    let insertedId = await dbActions.insertUser({...user, password: hashedPass});
+
+    let token = jwt.sign({id: insertedId}, secret, {expiresIn: "24h"});
 
     return token;
 }
@@ -35,15 +44,15 @@ export async function login(user: LoginUser){
 
     let data = await dbActions.getUserByEmail(user.email);
 
-    if(!data || data.password !== user.password){
-        throw new AppError("Invalid email or password.", 404);
+    if(!data || !(await bcrypt.compare(user.password, data.password))){
+        throw new AppError("Invalid email or password.", 401);
     }
 
     if(!secret){
         throw new AppError("JWT secret not defined.", 500);
     }
 
-    let token = jwt.sign({id: data.id}, secret);
+    let token = jwt.sign({id: data.id}, secret, {expiresIn: "24h"});
     return token;
 }
 

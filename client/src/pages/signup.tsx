@@ -92,8 +92,10 @@ export default function SignUp() {
                         {response && <span role="alert" className="px-2 text-xs text-destructive">* {response}</span>}
 
                         <Field className="items-center justify-center">
-                            <Button type="submit">Sign Up</Button>
-                            <p className="mt-2 text-sm text-muted-foreground">Already have an account? <Link to="/login" className="text-primary underline-offset-4 hover:underline">Login</Link></p>
+                            <div className="flex w-full items-center justify-center">
+                                <Button type="submit">Sign up</Button>
+                            </div>
+                            <p className="text-center text-sm text-muted-foreground">Already have an account? <Link to="/login" className="text-primary underline-offset-4 hover:underline">Login</Link></p>
                         </Field>
                     </FieldGroup>
                 </form>

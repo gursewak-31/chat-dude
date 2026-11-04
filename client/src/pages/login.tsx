@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field"
-import { useNavigate } from "react-router" 
+import { Link, useNavigate } from "react-router" 
 import React, { useEffect, useState, type FormEvent } from "react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { login } from "../api/auth-api";
@@ -76,9 +76,13 @@ export default function Login() {
                                 </button>
                             </div>
                             {invalidField.password && <span className="text-xs text-red-700">* {invalidField.password}</span>}
+                            {response && <span className="text-xs text-red-700">* {response}</span>}
                         </Field>
-                        <Field orientation="horizontal" className="justify-center">
-                            <Button type="submit">Login</Button>
+                        <Field orientation="vertical" className="items-center">
+                            <div className="flex w-full items-center justify-center">
+                                <Button type="submit">Login</Button>
+                            </div>
+                            <p className="text-center text-sm text-muted-foreground">Don't have account? <Link to="/signup" className="text-primary underline-offset-4 hover:underline">signup</Link></p>
                         </Field>
                     </FieldGroup>
                 </form>
