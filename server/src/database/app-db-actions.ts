@@ -37,10 +37,9 @@ export async function getUsers(userId: string){
 
     // select all users who are not in conversation with userId or other one and not the user itself
     let select = await conn.query(
-        `SELECT u.id, u.name 
+        `SELECT 
+            u.id, u.name 
         FROM users u 
-        LEFT JOIN conversation_members cm 
-            ON u.id = cm.user_id 
         WHERE u.id <> $1 
             AND NOT EXISTS (
                 SELECT 1 

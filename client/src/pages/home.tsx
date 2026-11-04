@@ -54,19 +54,16 @@ export default function Home() {
       if(socket){
         socket.onmessage = (e) => {
           let res = JSON.parse(e.data);
-          console.log("websocket message: ", res);
 
           if(res.type == "new_message"){
             // append new message to chat if sender is selected connection, else append to new message notification
             if(res.msgInfo.conversation_id == selectedConn?.id){
               setChatHistory(prevChat => [...prevChat, res.msgInfo]);
-              console.log("new message", res.msgInfo);
             }else{
               setMsgNotification(prevNotify => [...prevNotify, res.msgInfo]);
             }
           }else if(res.type == "message_status" && res.status == "sent"){
             setChatHistory(prevChat => [...prevChat, res.msgInfo]);
-            console.log("msg sent", res.msgInfo);
           }
         }
       }
@@ -77,7 +74,6 @@ export default function Home() {
         (async () => {
           let res = await getChat(selectedConn?.id); // pass conversation id
           setChatHistory(res.data);
-          console.log("set history")
 
           // remove new message notification for selected connection
           setMsgNotification(msgNotification.filter((msg) => msg.senderid != selectedConn.id)); 
