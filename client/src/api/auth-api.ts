@@ -45,3 +45,16 @@ export async function getUser(){
         return {success: false, msg: "Somthing went wrong. please try again later."};
     }
 }
+
+export async function logout(){
+    try{
+        let res = await req.get("/auth/logout");
+
+        return res.data;
+    }catch(error){
+        if(axios.isAxiosError(error)){
+            return error.response?.data;
+        }
+        return {success: false, msg: "Somthing went wrong. please try again later."};
+    }
+}

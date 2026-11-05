@@ -4,9 +4,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Message, MessageAvatar, MessageContent } from "@/components/ui/message";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
-import { useEffect, useState, useRef, useLayoutEffect } from "react";
+import { useEffect, useState } from "react";
 import useUser from "@/hook/useUser";
 import { getConnections, getChat, getUsers, addNewConnection } from "@/api/app-api";
+import { logout } from "@/api/auth-api";
+import { useNavigate } from "react-router-dom";
 import type { Conversation, NewMsgNotification, Chat } from "@/types/app-types";
 import type { User } from "@/types/app-types";
 import { FaComments, FaUserPlus } from 'react-icons/fa6';
@@ -25,6 +27,7 @@ export default function Home() {
     
     let [socket, setSocket] = useState<WebSocket | null>(null);
     let [chatHistory, setChatHistory] = useState<Chat[]>([]);
+    let redirect = useNavigate();
 
     function sendMessage(){
       if(!socket || !user || !selectedConn) return;
@@ -41,6 +44,14 @@ export default function Home() {
         setAddConnectionState(prev => ({...prev, [connectionId]: "added"}));
       }else{
         setAddConnectionState(prev => ({...prev, [connectionId]: "not added"}));
+      }
+    }
+
+    async function handleLogout(){
+      let res = await logout();
+
+      if(res.success){
+        redirect("/login");
       }
     }
 
@@ -116,7 +127,7 @@ export default function Home() {
                   </TabsList>
                 </Tabs>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 flex flex-col justify-between">
                 {tab == "connections" ? (
                   <Tabs defaultValue={""} orientation="vertical" className={"w-full"}>
                     <TabsList className={"w-full"}>
@@ -151,8 +162,24 @@ export default function Home() {
                     </TabsList>
                   </Tabs>
                 )}
+
+                <div className="p-2 flex gap-2 items-center rounded-2xl bg-accent">
+                  <Avatar>
+                    <AvatarFallback>{user?.name[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 flex justify-between items-center">
+                    <div className="text-sm">
+                      <p>{user?.name}</p>
+                      <span className="text-xs text-gray-500">{user?.email}</span>
+                    </div>
+                    <div>
+                      <Button variant={"outline"} onClick={handleLogout}>Log out</Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
             <div className="flex-1 border rounded-2xl flex flex-col p-1">
               <div className="flex-1 p-2 overflow-auto min-h-0">
                 {chatHistory.map((msg) => (
