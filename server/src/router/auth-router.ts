@@ -1,9 +1,10 @@
 import router from "express";
 import * as authController from "../controller/auth-controller.js";
+import limiter from "../middleware/limiter-middleware.js";
 
 const authRouter = router();
 
-authRouter.post("/login", authController.login);
+authRouter.post("/login", limiter, authController.login);
 
 authRouter.post("/signup", authController.signup);
 
