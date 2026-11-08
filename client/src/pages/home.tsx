@@ -71,7 +71,7 @@ export default function Home() {
             if(res.msgInfo.conversation_id == selectedConn?.id){
               setChatHistory(prevChat => [...prevChat, res.msgInfo]);
             }else{
-              setMsgNotification(prevNotify => [...prevNotify, res.msgInfo]);
+              setMsgNotification(prevNotify => [...prevNotify, {senderid: res.msgInfo.conversation_id}]);
             }
           }else if(res.type == "message_status" && res.status == "sent"){
             setChatHistory(prevChat => [...prevChat, res.msgInfo]);
@@ -131,8 +131,8 @@ export default function Home() {
                 {tab == "connections" ? (
                   <Tabs defaultValue={""} orientation="vertical" className={"w-full"}>
                     <TabsList className={"w-full"}>
-                      {connections ? connections.map((con) => (
-                        <TabsTrigger key={con.id} value={con.id} onClick={() => setSelectedConn(con)}>
+                      {connections ? connections.map((con, idx) => (
+                        <TabsTrigger key={con.id} value={con.id} onClick={() => setSelectedConn(con)} data-active={selectedConn?.id == con.id}>
                           <Avatar>
                             <AvatarFallback>{con.name[0]?.toUpperCase()}</AvatarFallback>
                           </Avatar>
@@ -144,23 +144,30 @@ export default function Home() {
                     </TabsList>
                   </Tabs>
                 ) : (
-                  <Tabs orientation="vertical" className={"w-full"}>
-                    <TabsList className="h-full w-full">
+                  <div className="w-full">
+                    <div className="h-full w-full bg-accent rounded-md">
                       {users?.map((user) => (
-                        <TabsTrigger value={user.id} key={user.id}>
-                          <Avatar>
-                            <AvatarFallback>{user.name[0]?.toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          {user.name}
-                          <Button onClick={() => handleAddConnection(user.id)} className="ml-auto">
-                            {addConnectionState[user.id] == "added" ? <MdDownloadDone />
-                            : addConnectionState[user.id] == "adding" ? <div className="spinner"></div> 
-                            : <FaUserPlus /> }
+                        <div key={user.id} className="flex items-center justify-between rounded-md px-1.5 py-1 text-sm font-medium text-gray-400 transition-colors hover:bg-accent hover:text-accent-foreground">
+                          <div className="flex items-center gap-2">
+                            <Avatar>
+                              <AvatarFallback>{user.name[0]?.toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span>{user.name}</span>
+                          </div>
+
+                          <Button variant={"ghost"}>
+                            {addConnectionState[user.id] == "added" ? (
+                              <MdDownloadDone />
+                            ) : addConnectionState[user.id] == "adding" ? (
+                              <div className="spinner"></div>
+                            ) : (
+                              <FaUserPlus />
+                            )}
                           </Button>
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 )}
 
                 <div className="p-2 flex gap-2 items-center rounded-2xl bg-accent">
