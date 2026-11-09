@@ -155,7 +155,7 @@ export default function Home() {
                             <span>{user.name}</span>
                           </div>
 
-                          <Button variant={"ghost"}>
+                          <Button variant={"ghost"} onClick={() => handleAddConnection(user.id)} disabled={addConnectionState[user.id] == "adding" || addConnectionState[user.id] == "added"}>
                             {addConnectionState[user.id] == "added" ? (
                               <MdDownloadDone />
                             ) : addConnectionState[user.id] == "adding" ? (
