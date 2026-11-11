@@ -22,3 +22,8 @@ export interface UserContext{
     user: User | null,
     setUser: React.Dispatch<React.SetStateAction<User | null>>
 }
+
+export interface TokenContext{
+    token: string,
+    setToken: React.Dispatch<React.SetStateAction<string>>
+}

@@ -3,13 +3,18 @@ import * as authService from "../service/auth-service.js";
 
 export async function signup(req: Request, res: Response, next: NextFunction){
     try{
-        let token = await authService.signup(req.body);
-        res.cookie("token", token, {
+        let userId = await authService.signup(req.body);
+
+        let accessToken = authService.generateAccessToken(userId);
+        let refreshToken = authService.generateRefreshToken(userId);
+
+        res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             sameSite: "lax",
-            maxAge: 24 * 60 * 60 * 1000
+            maxAge: 24 * 60 * 60 * 1000,
+            path: "/auth" // means the browser only sends the refresh cookie to matching authentication routes, rather than every endpoint
         });
-        res.status(200).json({success: true, msg: "User created successfully."});
+        res.status(200).json({success: true, msg: "User created successfully.", accessToken: accessToken});
     } catch (error) {
         next(error);
     }
@@ -17,13 +22,18 @@ export async function signup(req: Request, res: Response, next: NextFunction){
 
 export async function login(req: Request, res: Response, next: NextFunction){
     try{
-        let token = await authService.login(req.body);
-        res.cookie("token", token, {
+        let userId = await authService.login(req.body);
+
+        let accessToken = authService.generateAccessToken(userId);
+        let refreshToken = authService.generateRefreshToken(userId);
+
+        res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             sameSite: "lax",
-            maxAge: 24 * 60 * 60 * 1000
+            maxAge: 24 * 60 * 60 * 1000,
+            path: "/auth" // means the browser only sends the refresh cookie to matching authentication routes, rather than every endpoint
         });
-        res.status(200).json({success: true, msg: "User logged in successfully."});
+        res.status(200).json({success: true, msg: "User logged in successfully.", accessToken: accessToken});
     } catch (error) {
         next(error);
     }
@@ -42,6 +52,19 @@ export async function logout(req: Request, res: Response, next: NextFunction){
     try{
         res.clearCookie("token");
         res.status(200).json({success: true});
+    }catch(error){
+        next(error);
+    }
+}
+
+export async function refresh(req: Request, res: Response, next: NextFunction){
+    try{
+        let oldToken = req.cookies.refreshToken;
+        let userId = await authService.refresh(oldToken);
+
+        let accessToken = authService.generateAccessToken(userId);
+
+        res.status(200).json({success: true, accessToken: accessToken});
     }catch(error){
         next(error);
     }

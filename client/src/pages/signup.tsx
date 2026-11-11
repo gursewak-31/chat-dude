@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { signup } from "../api/auth-api";
+import useToken from "@/hook/useToken";
 
 export default function SignUp() {
     const [isShowPass, setIsShowPass] = useState(false);
@@ -13,6 +14,7 @@ export default function SignUp() {
     const [password, setPassword] = useState("");
     const [invalidField, setInvalidField] = useState({ name: "", email: "", password: "" });
     const [response, setResponse] = useState("");
+    const {setToken} = useToken();
     const redirect = useNavigate();
 
     async function handleSignup(event: FormEvent<HTMLFormElement>) {
@@ -21,6 +23,7 @@ export default function SignUp() {
 
         const res = await signup({name: name, email: email, password: password });
         if (res.success) {
+            setToken(res.accessToken)
             redirect("/");
             return;
         }

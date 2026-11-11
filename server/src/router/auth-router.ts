@@ -12,4 +12,6 @@ authRouter.get("/user", authController.getUser);
 
 authRouter.get("/logout", authController.logout);
 
+authRouter.get("/refresh", authController.refresh);
+
 export default authRouter;

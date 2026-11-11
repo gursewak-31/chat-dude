@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import AppError from "../errors/app-errors.js";
+import jwt from "jsonwebtoken";
 
 export default function errorHandler(err: Error, req: Request, res: Response, next: NextFunction){
     console.log(err)
@@ -7,6 +8,14 @@ export default function errorHandler(err: Error, req: Request, res: Response, ne
         res.status(err.statusCode).json({
             success: false,
             msg: err.message
+        });
+        return;
+    }
+
+    if(err instanceof jwt.TokenExpiredError){
+        res.status(401).json({
+            success: false,
+            msg: "Token expired. Please log in again."
         });
         return;
     }

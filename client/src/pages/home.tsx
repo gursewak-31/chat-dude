@@ -14,11 +14,14 @@ import type { User } from "@/types/app-types";
 import { FaComments, FaUserPlus } from 'react-icons/fa6';
 import { HiUsers } from "react-icons/hi"
 import { MdDownloadDone } from "react-icons/md";
+import useToken from "@/hook/useToken";
+import PageLoader from "@/components/page/page-loader";
 
 export default function Home() {
     let [msg, setMsg] = useState('');
     let [msgNotification, setMsgNotification] = useState<NewMsgNotification[]>([]);
     let { user } = useUser();
+    let { token } = useToken();
     let [tab, setTab] = useState<"connections" | "users">("connections");
     let [connections, setConnections] = useState<Conversation[] | null>(null); // holds all conversations of user
     let [selectedConn, setSelectedConn] = useState<Conversation | null>(null);
@@ -39,7 +42,7 @@ export default function Home() {
 
     async function handleAddConnection(connectionId: string){
       setAddConnectionState(prev => ({...prev, [connectionId]: "adding"}));
-      let res = await addNewConnection(connectionId);
+      let res = await addNewConnection(connectionId, token);
       if(res.success){
         setAddConnectionState(prev => ({...prev, [connectionId]: "added"}));
       }else{
@@ -48,7 +51,7 @@ export default function Home() {
     }
 
     async function handleLogout(){
-      let res = await logout();
+      let res = await logout(token);
 
       if(res.success){
         redirect("/login");
@@ -83,7 +86,7 @@ export default function Home() {
     useEffect(() => {
       if(selectedConn){
         (async () => {
-          let res = await getChat(selectedConn?.id); // pass conversation id
+          let res = await getChat(selectedConn?.id, token); // pass conversation id as first parameter
           setChatHistory(res.data);
 
           // remove new message notification for selected connection
@@ -96,7 +99,7 @@ export default function Home() {
     useEffect(() => {
       if(tab == "connections"){
         (async () => {
-          let res = await getConnections();
+          let res = await getConnections(token);
 
           if(res.success && res.data.length != 0){
             setConnections(res.data);
@@ -106,7 +109,7 @@ export default function Home() {
         })();
       }else if(tab == "users"){
         (async () => {
-          let res = await getUsers();
+          let res = await getUsers(token);
       
           if(res.success && res.data.length != 0){
             setUsers(res.data);

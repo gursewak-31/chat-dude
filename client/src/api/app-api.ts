@@ -1,13 +1,71 @@
 import axios from "axios";
+import { getToken, updateToken } from "@/utils/token-bridge";
 
 let req = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
     withCredentials: true
-})
+});
 
-export async function getConnections(){
+// Separate instance for refreshing tokens
+const refreshReq = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    withCredentials: true
+});
+
+let refreshPromise: Promise<string> | null = null;
+
+// Attach access token
+req.interceptors.request.use(config => {
+
+    const token = getToken();
+
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+});
+
+// Refresh interceptor
+req.interceptors.response.use(
+    response => response,
+
+    async error => {
+
+        const originalReq = error.config;
+
+        if (
+            error.response?.status !== 401 ||
+            !originalReq ||
+            originalReq._retry ||
+            originalReq.url?.includes("/auth/refresh")
+        ) {
+            return Promise.reject(error);
+        }
+
+        originalReq._retry = true;
+
+        try {
+
+            const newToken = await refresh();
+
+            originalReq.headers.Authorization =
+                `Bearer ${newToken}`;
+
+            return req(originalReq);
+
+        } catch (refreshError) {
+
+            updateToken(null);
+
+            return Promise.reject(refreshError);
+        }
+    }
+);
+
+export async function getConnections(token: string){
     try{
-        let res = await req.get("/app/connections");
+        let res = await req.get("/app/connections", {headers: {"Authorization": `Bearer ${token}`}});
 
         return res.data
     }catch(error){
@@ -18,9 +76,9 @@ export async function getConnections(){
     }
 }
 
-export async function getUsers(){
+export async function getUsers(token: string){
     try{
-        let res = await req.get("/app/users");
+        let res = await req.get("/app/users", {headers: {"Authorization": `Bearer ${token}`}});
 
         return res.data;
     }catch(error){
@@ -31,9 +89,9 @@ export async function getUsers(){
     }
 }
 
-export async function getChat(conversationId: string){
+export async function getChat(conversationId: string, token: string){
     try{
-        let res = await req.get(`/app/conversation/${conversationId}`);
+        let res = await req.get(`/app/conversation/${conversationId}`, {headers: {"Authorization": `Bearer ${token}`}});
 
         return res.data;
     }catch(error){
@@ -44,9 +102,9 @@ export async function getChat(conversationId: string){
     }
 }
 
-export async function addNewConnection(newConnectionId: string){
+export async function addNewConnection(newConnectionId: string, token: string){
     try{
-        let res = await req.post("/app/new-connection", { connectionId: newConnectionId }, {headers: { "Content-Type": "application/json" }});
+        let res = await req.post("/app/new-connection", { connectionId: newConnectionId }, {headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`}});
 
         return res.data;
     }catch(error){
@@ -55,4 +113,24 @@ export async function addNewConnection(newConnectionId: string){
         }
         return {success: false, msg: "Somthing went wrong. please try again later."};
     }
+}
+
+export async function refresh() {
+
+    if (!refreshPromise) {
+        refreshPromise = refreshReq
+            .get("/auth/refresh")
+            .then(res => {
+                const newToken = res.data.accessToken;
+
+                updateToken(newToken);
+
+                return newToken;
+            })
+            .finally(() => {
+                refreshPromise = null;
+            });
+    }
+
+    return refreshPromise;
 }

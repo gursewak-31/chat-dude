@@ -4,13 +4,15 @@ import dotenv from "dotenv";
 import AppError from "../errors/app-errors.js";
 
 dotenv.config();
-let secret = process.env.JWT_SECRET;
+let secret = process.env.JWT_ACCESS_SECRET;
 
 export default function authMiddleware(req: Request, res: Response, next: NextFunction){
-    if(req.url == "/auth/login" || req.url == "/auth/signup") return next();
+    if(req.url == "/auth/login" || req.url == "/auth/signup" || req.url == "/auth/refresh") return next();
 
     try{
-        let token = req.cookies.token;
+        let token = req.headers.authorization;
+        token = token?.split(" ")[1];
+
         if(!token){
             throw new AppError("Cookie not found. Please log in.", 401);
         }

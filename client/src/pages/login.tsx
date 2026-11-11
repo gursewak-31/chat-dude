@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router"
 import React, { useEffect, useState, type FormEvent } from "react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { login } from "../api/auth-api";
+import useToken from "@/hook/useToken";
 
 export default function Login() {
     let [isShowPass, setIsShowPass] = useState(false);
@@ -12,6 +13,7 @@ export default function Login() {
     let [password, setPassword] = useState("");
     let [invalidField, setInvalidField] = useState({email: "", password: ""});
     let [response, setResponse] = useState("");
+    let {setToken} = useToken();
     let redirect = useNavigate();
 
     async function handleLogin(e: FormEvent<HTMLFormElement>){
@@ -22,6 +24,7 @@ export default function Login() {
         let res = await login({email: email, password: password});
 
         if(res.success){
+            setToken(res.accessToken);
             redirect("/");
             return;
         }
