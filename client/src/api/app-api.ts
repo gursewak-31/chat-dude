@@ -17,10 +17,13 @@ let refreshPromise: Promise<string> | null = null;
 // Attach access token
 req.interceptors.request.use(config => {
 
-    const token = getToken();
-
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    // Don't overwrite an Authorization header
+    // that was explicitly set for this request.
+    if (!config.headers.Authorization) {
+        const token = getToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
     }
 
     return config;
@@ -63,9 +66,9 @@ req.interceptors.response.use(
     }
 );
 
-export async function getConnections(token: string){
+export async function getConnections(){
     try{
-        let res = await req.get("/app/connections", {headers: {"Authorization": `Bearer ${token}`}});
+        let res = await req.get("/app/connections");
 
         return res.data
     }catch(error){
@@ -76,9 +79,9 @@ export async function getConnections(token: string){
     }
 }
 
-export async function getUsers(token: string){
+export async function getUsers(){
     try{
-        let res = await req.get("/app/users", {headers: {"Authorization": `Bearer ${token}`}});
+        let res = await req.get("/app/users");
 
         return res.data;
     }catch(error){
@@ -89,9 +92,9 @@ export async function getUsers(token: string){
     }
 }
 
-export async function getChat(conversationId: string, token: string){
+export async function getChat(conversationId: string){
     try{
-        let res = await req.get(`/app/conversation/${conversationId}`, {headers: {"Authorization": `Bearer ${token}`}});
+        let res = await req.get(`/app/conversation/${conversationId}`);
 
         return res.data;
     }catch(error){
@@ -102,9 +105,9 @@ export async function getChat(conversationId: string, token: string){
     }
 }
 
-export async function addNewConnection(newConnectionId: string, token: string){
+export async function addNewConnection(newConnectionId: string){
     try{
-        let res = await req.post("/app/new-connection", { connectionId: newConnectionId }, {headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`}});
+        let res = await req.post("/app/new-connection", { connectionId: newConnectionId }, {headers: { "Content-Type": "application/json"}});
 
         return res.data;
     }catch(error){

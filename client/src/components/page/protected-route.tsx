@@ -18,7 +18,7 @@ export default function ProtectedRoutes(){
             () => token,
             (newToken) => setToken(newToken || "")
         );
-    }, [setToken]);
+    }, [token]);
 
     useEffect(() => {
         let active = true;
@@ -35,7 +35,7 @@ export default function ProtectedRoutes(){
                 }
 
                 // Retrieve user using access token.
-                const res = await getUser(currentToken);
+                const res = await getUser();
 
                 if (!active) return;
 

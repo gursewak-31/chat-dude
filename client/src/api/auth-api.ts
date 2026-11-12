@@ -66,7 +66,6 @@ req.interceptors.response.use(
 
 export async function signup(data: SignupData){
     try{
-        console.log(data)
         let res = await req.post("/auth/signup", data, {headers: {"Content-Type": "application/json"}});
 
         return res.data;
@@ -91,9 +90,9 @@ export async function login(credentials: LoginData){
     }
 }
 
-export async function getUser(accessToken: string){
+export async function getUser(){
     try{
-        let res = await req.get("/auth/user", {headers: {"Authorization": `Bearer ${accessToken}`}});
+        let res = await req.get("/auth/user");
 
         return res.data;
     }catch(error){
@@ -104,9 +103,9 @@ export async function getUser(accessToken: string){
     }
 }
 
-export async function logout(accessToken: string){
+export async function logout(){
     try{
-        let res = await req.get("/auth/logout", {headers: {"Authorization": `Bearer ${accessToken}`}});
+        let res = await req.get("/auth/logout");
 
         return res.data;
     }catch(error){
