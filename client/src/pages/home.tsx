@@ -42,7 +42,7 @@ export default function Home() {
 
     async function handleAddConnection(connectionId: string){
       setAddConnectionState(prev => ({...prev, [connectionId]: "adding"}));
-      let res = await addNewConnection(connectionId, token);
+      let res = await addNewConnection(connectionId);
       if(res.success){
         setAddConnectionState(prev => ({...prev, [connectionId]: "added"}));
       }else{
@@ -51,7 +51,7 @@ export default function Home() {
     }
 
     async function handleLogout(){
-      let res = await logout(token);
+      let res = await logout();
 
       if(res.success){
         redirect("/login");
@@ -86,7 +86,7 @@ export default function Home() {
     useEffect(() => {
       if(selectedConn){
         (async () => {
-          let res = await getChat(selectedConn?.id, token); // pass conversation id as first parameter
+          let res = await getChat(selectedConn?.id); // pass conversation id as first parameter
           setChatHistory(res.data);
 
           // remove new message notification for selected connection
@@ -99,7 +99,7 @@ export default function Home() {
     useEffect(() => {
       if(tab == "connections"){
         (async () => {
-          let res = await getConnections(token);
+          let res = await getConnections();
 
           if(res.success && res.data.length != 0){
             setConnections(res.data);
@@ -109,7 +109,7 @@ export default function Home() {
         })();
       }else if(tab == "users"){
         (async () => {
-          let res = await getUsers(token);
+          let res = await getUsers();
       
           if(res.success && res.data.length != 0){
             setUsers(res.data);
