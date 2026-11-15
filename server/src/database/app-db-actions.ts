@@ -107,6 +107,17 @@ export async function getConversationMembers(conversationId: string, userId: str
     return select.rows;
 }
 
+export async function isConversationMember(conversationId: string, userId: string){
+    let conn = await connectDB();
+
+    let select = await conn.query(
+        "SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2 LIMIT 1",
+        [conversationId, userId]
+    );
+
+    return Boolean(select.rowCount);
+}
+
 export async function addNewConnection(userId: string, newConnectionId: string){
     let conn = await connectDB();
 

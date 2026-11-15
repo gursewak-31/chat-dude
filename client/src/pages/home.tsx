@@ -4,10 +4,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Message, MessageAvatar, MessageContent } from "@/components/ui/message";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useUser from "@/hook/useUser";
 import { getConnections, getChat, getUsers, addNewConnection } from "@/api/app-api";
-import { logout } from "@/api/auth-api";
+import { logout, refresh } from "@/api/auth-api";
 import { useNavigate } from "react-router-dom";
 import type { Conversation, NewMsgNotification, Chat } from "@/types/app-types";
 import type { User } from "@/types/app-types";
@@ -15,13 +15,12 @@ import { FaComments, FaUserPlus } from 'react-icons/fa6';
 import { HiUsers } from "react-icons/hi"
 import { MdDownloadDone } from "react-icons/md";
 import useToken from "@/hook/useToken";
-import PageLoader from "@/components/page/page-loader";
 
 export default function Home() {
     let [msg, setMsg] = useState('');
     let [msgNotification, setMsgNotification] = useState<NewMsgNotification[]>([]);
     let { user } = useUser();
-    let { token } = useToken();
+    let { token, setToken } = useToken();
     let [tab, setTab] = useState<"connections" | "users">("connections");
     let [connections, setConnections] = useState<Conversation[] | null>(null); // holds all conversations of user
     let [selectedConn, setSelectedConn] = useState<Conversation | null>(null);
@@ -30,12 +29,14 @@ export default function Home() {
     
     let [socket, setSocket] = useState<WebSocket | null>(null);
     let [chatHistory, setChatHistory] = useState<Chat[]>([]);
+    let selectedConnRef = useRef(selectedConn);
+    selectedConnRef.current = selectedConn;
     let redirect = useNavigate();
 
     function sendMessage(){
-      if(!socket || !user || !selectedConn) return;
+      if(!socket || socket.readyState !== WebSocket.OPEN || !user || !selectedConn || !msg.trim()) return;
 
-      let data = JSON.stringify({type: "message", sendTo: selectedConn.id, text: msg});
+      let data = JSON.stringify({type: "MESSAGE", sendTo: selectedConn.id, text: msg});
       socket.send(data);
       setMsg('');
     }
@@ -59,29 +60,59 @@ export default function Home() {
     }
 
     useEffect(() => {
-      if(!user) return;
-      let newSocketObj = new WebSocket("ws://localhost:3001");
+      if(!user || !token) return;
+
+      let url = import.meta.env.VITE_WS_URL;
+      let newSocketObj = new WebSocket(url);
       setSocket(newSocketObj);
-    }, [user]);
 
-    useEffect(() => {
-      if(socket){
-        socket.onmessage = (e) => {
-          let res = JSON.parse(e.data);
+      newSocketObj.onopen = () => { // send access token for authentication on connection open
+        newSocketObj.send(JSON.stringify({
+          type: "AUTH",
+          accessToken: token
+        }));
+      };
 
+      newSocketObj.onmessage = (e) => {
+        try {
+          const res = JSON.parse(e.data);
           if(res.type == "new_message"){
             // append new message to chat if sender is selected connection, else append to new message notification
-            if(res.msgInfo.conversation_id == selectedConn?.id){
+            if(res.msgInfo.conversation_id == selectedConnRef.current?.id){
               setChatHistory(prevChat => [...prevChat, res.msgInfo]);
             }else{
               setMsgNotification(prevNotify => [...prevNotify, {senderid: res.msgInfo.conversation_id}]);
             }
-          }else if(res.type == "message_status" && res.status == "sent"){
+          }else if(res.type == "MESSAGE_STATUS" && res.status == "sent"){
             setChatHistory(prevChat => [...prevChat, res.msgInfo]);
+          }
+        } catch {
+          console.error("Received an invalid WebSocket message");
+        }
+      };
+
+      newSocketObj.onclose = async (e) => {
+        if(e.code === 4001){
+          let newAccessToken = await refresh();
+
+          if(newAccessToken){
+            setToken(newAccessToken);
+
+            newSocketObj.send(JSON.stringify({
+              type: "AUTH",
+              accessToken: newAccessToken
+            }));
+          }else{
+            logout();
           }
         }
       }
-    }, [socket]);
+
+      return () => {
+        newSocketObj.close();
+        setSocket(currentSocket => currentSocket === newSocketObj ? null : currentSocket);
+      };
+    }, [user, token]);
 
     useEffect(() => {
       if(selectedConn){
