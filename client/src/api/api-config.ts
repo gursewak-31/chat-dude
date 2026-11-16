@@ -36,7 +36,9 @@ req.interceptors.response.use(
             error.response?.status !== 401 ||
             !originalReq ||
             originalReq._retry ||
-            originalReq.url?.includes("/auth/refresh")
+            originalReq.url?.includes("/auth/refresh") ||
+            originalReq.url?.includes("/auth/login") ||
+            originalReq.url?.includes("/auth/signup")
         ) {
             return Promise.reject(error);
         }
