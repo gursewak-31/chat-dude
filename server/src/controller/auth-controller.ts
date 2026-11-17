@@ -50,7 +50,7 @@ export async function getUser(req: Request, res: Response, next: NextFunction){
 
 export async function logout(req: Request, res: Response, next: NextFunction){
     try{
-        res.clearCookie("token");
+        res.clearCookie("refreshToken");
         res.status(200).json({success: true});
     }catch(error){
         next(error);
