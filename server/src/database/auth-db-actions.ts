@@ -30,3 +30,25 @@ export async function getUserById(id: string){
 
     return select.rows[0]; // return the user object
 }
+
+export async function insertRefreshToken(userId: string, refreshToken: string){
+    let conn = await connectDB();
+
+    let insert = await conn.query(
+        "INSERT INTO refresh_tokens (user_id, token, created_at, expire_at) VALUES ($1, $2, NOW(), NOW() + INTERVAL '1 day') RETURNING id",
+        [userId, refreshToken]
+    );
+
+    return insert.rows[0].id; // return the id of the inserted refresh token
+}
+
+export async function getRefreshToken(userId: string, refreshToken: string){
+    let conn = await connectDB();
+
+    let select = await conn.query(
+        "SELECT * FROM refresh_tokens WHERE user_id = $1 AND token = $2 AND expire_at > NOW() AND revoked_At IS NULL",
+        [userId, refreshToken]
+    );
+
+    return select.rows[0]; // return the refresh token object
+}

@@ -63,7 +63,23 @@ export async function refresh(oldToken: string){
 
     let decoded: { id: string } = jwt.verify(oldToken, RefreshSecret) as { id: string };
 
+    let tokenData = await dbActions.getRefreshToken(decoded.id, oldToken); // check if the refresh token exists in the database AND is not expired or revoked
+
+    if(!tokenData){
+        throw new AppError("Invalid refresh token. Please log in.", 401);
+    }
+
     return decoded.id;
+}
+
+export async function insertRefreshToken(userId: string, refreshToken: string){
+    let insertedId = await dbActions.insertRefreshToken(userId, refreshToken);
+
+    if(!insertedId){
+        throw new AppError("Failed to insert refresh token.", 500);
+    }
+
+    return insertedId;
 }
 
 export function generateAccessToken(userId: string){
@@ -71,7 +87,7 @@ export function generateAccessToken(userId: string){
         throw new AppError("JWT secret not defined.", 500);
     }
 
-    return jwt.sign({id: userId}, AccessSecret, {expiresIn: "1m"});
+    return jwt.sign({id: userId}, AccessSecret, {expiresIn: "5m"});
 }
 
 export function generateRefreshToken(userId: string){

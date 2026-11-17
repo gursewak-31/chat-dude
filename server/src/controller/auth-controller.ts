@@ -8,6 +8,8 @@ export async function signup(req: Request, res: Response, next: NextFunction){
         let accessToken = authService.generateAccessToken(userId);
         let refreshToken = authService.generateRefreshToken(userId);
 
+        await authService.insertRefreshToken(userId, refreshToken);
+
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             sameSite: "lax",
@@ -26,6 +28,8 @@ export async function login(req: Request, res: Response, next: NextFunction){
 
         let accessToken = authService.generateAccessToken(userId);
         let refreshToken = authService.generateRefreshToken(userId);
+
+        await authService.insertRefreshToken(userId, refreshToken);
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
