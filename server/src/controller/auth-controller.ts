@@ -54,6 +54,11 @@ export async function getUser(req: Request, res: Response, next: NextFunction){
 
 export async function logout(req: Request, res: Response, next: NextFunction){
     try{
+        let refreshToken = req.cookies.refreshToken;
+        let userId = await authService.refresh(refreshToken); // check if the refresh token is valid
+
+        await authService.revokeRefreshToken(userId, refreshToken); // revoke the refresh token in the database
+
         res.clearCookie("refreshToken");
         res.status(200).json({success: true});
     }catch(error){
@@ -63,8 +68,8 @@ export async function logout(req: Request, res: Response, next: NextFunction){
 
 export async function refresh(req: Request, res: Response, next: NextFunction){
     try{
-        let oldToken = req.cookies.refreshToken;
-        let userId = await authService.refresh(oldToken);
+        let refreshToken = req.cookies.refreshToken;
+        let userId = await authService.refresh(refreshToken); // check if the refresh token is valid
 
         let accessToken = authService.generateAccessToken(userId);
 

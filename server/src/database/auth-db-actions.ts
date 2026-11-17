@@ -46,9 +46,20 @@ export async function getRefreshToken(userId: string, refreshToken: string){
     let conn = await connectDB();
 
     let select = await conn.query(
-        "SELECT * FROM refresh_tokens WHERE user_id = $1 AND token = $2 AND expire_at > NOW() AND revoked_At IS NULL",
+        "SELECT * FROM refresh_tokens WHERE user_id = $1 AND token = $2 AND expire_at > NOW() AND revoked_at IS NULL",
         [userId, refreshToken]
     );
 
     return select.rows[0]; // return the refresh token object
+}
+
+export async function revokeRefreshToken(userId: string, refreshToken: string){
+    let conn = await connectDB();
+
+    let update = await conn.query(
+        "UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND token = $2",
+        [userId, refreshToken]
+    );
+
+    return update.rowCount && update.rowCount > 0; // return true if a row was updated, false otherwise
 }

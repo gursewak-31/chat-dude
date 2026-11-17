@@ -52,8 +52,8 @@ export async function getUser(userId: string){
     return user;
 }
 
-export async function refresh(oldToken: string){
-    if(!oldToken){
+export async function refresh(refreshToken: string){
+    if(!refreshToken){
         throw new AppError("Cookie not found. Please log in.", 401);
     }
 
@@ -61,9 +61,9 @@ export async function refresh(oldToken: string){
         throw new AppError("JWT secret not defined.", 500);
     }
 
-    let decoded: { id: string } = jwt.verify(oldToken, RefreshSecret) as { id: string };
+    let decoded: { id: string } = jwt.verify(refreshToken, RefreshSecret) as { id: string };
 
-    let tokenData = await dbActions.getRefreshToken(decoded.id, oldToken); // check if the refresh token exists in the database AND is not expired or revoked
+    let tokenData = await dbActions.getRefreshToken(decoded.id, refreshToken); // check if the refresh token exists in the database AND is not expired or revoked
 
     if(!tokenData){
         throw new AppError("Invalid refresh token. Please log in.", 401);
@@ -96,4 +96,14 @@ export function generateRefreshToken(userId: string){
     }
 
     return jwt.sign({id: userId}, RefreshSecret, {expiresIn: "24h"});
+}
+
+export async function revokeRefreshToken(userId: string, refreshToken: string){
+    let revoked = await dbActions.revokeRefreshToken(userId, refreshToken);
+
+    if(!revoked){
+        throw new AppError("Failed to revoke refresh token.", 500);
+    }
+
+    return revoked;
 }

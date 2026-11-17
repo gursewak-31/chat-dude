@@ -55,6 +55,8 @@ export default function Home() {
       let res = await logout();
 
       if(res.success){
+        setUsers(null);
+        setToken('');
         redirect("/login");
       }
     }
