@@ -42,12 +42,12 @@ export async function insertRefreshToken(userId: string, refreshToken: string){
     return insert.rows[0].id; // return the id of the inserted refresh token
 }
 
-export async function getRefreshToken(userId: string, refreshToken: string){
+export async function getRefreshToken(refreshToken: string){
     let conn = await connectDB();
 
     let select = await conn.query(
-        "SELECT * FROM refresh_tokens WHERE user_id = $1 AND token = $2 AND expire_at > NOW() AND revoked_at IS NULL",
-        [userId, refreshToken]
+        "SELECT * FROM refresh_tokens WHERE token = $1 AND expire_at > NOW() AND revoked_at IS NULL",
+        [refreshToken]
     );
 
     return select.rows[0]; // return the refresh token object
@@ -62,4 +62,28 @@ export async function revokeRefreshToken(userId: string, refreshToken: string){
     );
 
     return update.rowCount && update.rowCount > 0; // return true if a row was updated, false otherwise
+}
+
+export async function rotateRefreshToken(userId: string, oldRefreshToken: string, newRefreshToken: string){
+    let conn = await connectDB();
+
+    await conn.query("BEGIN");
+    try{
+        let update1 = await conn.query(
+            "UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND token = $2",
+            [userId, oldRefreshToken]
+        );
+
+        let update2 = await conn.query(
+            "INSERT INTO refresh_tokens (user_id, token, created_at, expire_at) VALUES ($1, $2, NOW(), NOW() + INTERVAL '1 day') RETURNING id",
+            [userId, newRefreshToken]
+        );
+
+        await conn.query("COMMIT");
+
+        return true;
+    }catch(error){
+        await conn.query("ROLLBACK");
+        throw error;
+    }
 }

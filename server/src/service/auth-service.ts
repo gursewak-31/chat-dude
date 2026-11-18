@@ -4,6 +4,7 @@ import * as dbActions from "../database/auth-db-actions.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import AppError from "../errors/app-errors.js";
 
 dotenv.config();
@@ -61,18 +62,22 @@ export async function refresh(refreshToken: string){
         throw new AppError("JWT secret not defined.", 500);
     }
 
-    let decoded: { id: string } = jwt.verify(refreshToken, RefreshSecret) as { id: string };
+    // hash refresh token again to compare with hashed token stored in database
+    refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
-    let tokenData = await dbActions.getRefreshToken(decoded.id, refreshToken); // check if the refresh token exists in the database AND is not expired or revoked
+    let tokenData = await dbActions.getRefreshToken(refreshToken); // check if the refresh token exists in the database AND is not expired or revoked
 
     if(!tokenData){
         throw new AppError("Invalid refresh token. Please log in.", 401);
     }
 
-    return decoded.id;
+    return tokenData.user_id;
 }
 
 export async function insertRefreshToken(userId: string, refreshToken: string){
+    // hash refresh token before store it into database
+    refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
     let insertedId = await dbActions.insertRefreshToken(userId, refreshToken);
 
     if(!insertedId){
@@ -91,14 +96,13 @@ export function generateAccessToken(userId: string){
 }
 
 export function generateRefreshToken(userId: string){
-    if(!RefreshSecret){
-        throw new AppError("JWT secret not defined.", 500);
-    }
-
-    return jwt.sign({id: userId}, RefreshSecret, {expiresIn: "24h"});
+    // generate a random string for refresh token instead of using JWT, as refresh tokens are long-lived and don't need to be decoded
+    return crypto.randomBytes(64).toString("hex"); 
 }
 
 export async function revokeRefreshToken(userId: string, refreshToken: string){
+    refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
     let revoked = await dbActions.revokeRefreshToken(userId, refreshToken);
 
     if(!revoked){
@@ -106,4 +110,18 @@ export async function revokeRefreshToken(userId: string, refreshToken: string){
     }
 
     return revoked;
+}
+
+export async function rotateRefreshToken(userId: string, oldRefreshToken: string, newRefreshToken: string){
+    // hash refresh token before store it into database
+    newRefreshToken = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
+    oldRefreshToken = crypto.createHash("sha256").update(oldRefreshToken).digest("hex");
+
+    let rotate = await dbActions.rotateRefreshToken(userId, oldRefreshToken, newRefreshToken);
+
+    if(!rotate){
+        throw new AppError("Failed to rotate refresh token.", 500);
+    }
+
+    return rotate;
 }

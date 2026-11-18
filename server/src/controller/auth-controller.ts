@@ -68,12 +68,21 @@ export async function logout(req: Request, res: Response, next: NextFunction){
 
 export async function refresh(req: Request, res: Response, next: NextFunction){
     try{
-        let refreshToken = req.cookies.refreshToken;
-        let userId = await authService.refresh(refreshToken); // check if the refresh token is valid
+        let oldRefreshToken = req.cookies.refreshToken;
+        let userId = await authService.refresh(oldRefreshToken); // check if the old refresh token is valid
 
-        let accessToken = authService.generateAccessToken(userId);
+        let newAccessToken = authService.generateAccessToken(userId);
+        let newRefreshToken = authService.generateRefreshToken(userId);
 
-        res.status(200).json({success: true, accessToken: accessToken});
+        await authService.rotateRefreshToken(userId, oldRefreshToken, newRefreshToken);
+
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            maxAge: 24 * 60 * 60 * 1000,
+            path: "/auth" // means the browser only sends the refresh cookie to matching authentication routes, rather than every endpoint
+        });
+        res.status(200).json({success: true, accessToken: newAccessToken});
     }catch(error){
         next(error);
     }
