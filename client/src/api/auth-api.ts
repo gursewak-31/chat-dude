@@ -31,9 +31,9 @@ export async function login(credentials: LoginData){
     }
 }
 
-export async function getUser(){
+export async function getUser(accessToken: string){
     try{
-        let res = await req.get("/auth/user");
+        let res = await req.get("/auth/user", {headers: { Authorization: `Bearer ${accessToken}` }});
 
         return res.data;
     }catch(error){

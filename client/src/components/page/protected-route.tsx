@@ -35,7 +35,7 @@ export default function ProtectedRoutes(){
                 }
 
                 // Retrieve user using access token.
-                const res = await getUser();
+                const res = await getUser(currentToken);
 
                 if (!active) return;
 
