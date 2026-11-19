@@ -59,7 +59,11 @@ export async function logout(req: Request, res: Response, next: NextFunction){
 
         await authService.revokeRefreshToken(userId, refreshToken); // revoke the refresh token in the database
 
-        res.clearCookie("refreshToken");
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            sameSite: "lax",
+            path: "/auth"
+        });
         res.status(200).json({success: true});
     }catch(error){
         next(error);
