@@ -9,7 +9,6 @@ import AppError from "../errors/app-errors.js";
 
 dotenv.config();
 const AccessSecret = process.env.JWT_ACCESS_SECRET;
-const RefreshSecret = process.env.JWT_REFRESH_SECRET;
 
 export async function signup(user: SignupUser){
     let isValid = validateSignup(user);
@@ -56,10 +55,6 @@ export async function getUser(userId: string){
 export async function refresh(refreshToken: string){
     if(!refreshToken){
         throw new AppError("Cookie not found. Please log in.", 401);
-    }
-
-    if(!RefreshSecret){
-        throw new AppError("JWT secret not defined.", 500);
     }
 
     // hash refresh token again to compare with hashed token stored in database
