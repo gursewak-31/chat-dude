@@ -6,22 +6,19 @@ import React, { useEffect, useState, type FormEvent } from "react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { login } from "../api/auth-api";
 import useToken from "@/hook/useToken";
+import type { LoginData } from "@/types/auth-types";
+import { useForm } from "react-hook-form";
 
 export default function Login() {
     let [isShowPass, setIsShowPass] = useState(false);
-    let [email, setEmail] = useState("");
-    let [password, setPassword] = useState("");
-    let [invalidField, setInvalidField] = useState({email: "", password: ""});
     let [response, setResponse] = useState("");
     let {setToken} = useToken();
     let redirect = useNavigate();
 
-    async function handleLogin(e: FormEvent<HTMLFormElement>){
-        e.preventDefault();
-        let valid = validate();
-        if(!valid) return;
+    let { register, handleSubmit, formState } = useForm<LoginData>();
 
-        let res = await login({email: email, password: password});
+    async function handleLogin(data: LoginData){
+        let res = await login(data);
 
         if(res.success){
             setToken(res.accessToken);
@@ -32,22 +29,10 @@ export default function Login() {
         setResponse(res.msg);
     }
 
-    function validate(){
-        let errors = {email: "", password: ""}
-
-        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-            errors.email = "Please enter valid email address."
-        }
-        if(!/^.{8,32}$/.test(password.trim())){
-            errors.password = "Password must be 8 to 32 characters long.";
-        }
-
-        setInvalidField(errors);
-        return !errors.email && !errors.password
-    }
-
     useEffect(() => {
-        if(response) setTimeout(() => setResponse(""), 5000);
+        if (!response) return;
+        let timeout = window.setTimeout(() => setResponse(""), 5000);
+        return () => window.clearTimeout(timeout);
     }, [response]);
 
     return(
@@ -57,28 +42,42 @@ export default function Login() {
                     <h2 className="font-bold">Welcome</h2>
                 </div>
 
-                <form onSubmit={handleLogin}>
+                <form onSubmit={handleSubmit(handleLogin)}>
                     <FieldGroup>
                         <Field>
                             <FieldLabel htmlFor="username" >Email</FieldLabel>
-                            <Input type="email" id="username" placeholder="example@gmail.com" aria-invalid={!!invalidField.email} value={email} onChange={(e) => {
-                                setEmail(e.target.value);
-                                setInvalidField({...invalidField, email: ""});
-                            }}></Input>
-                            {invalidField.email && <span className="text-xs text-red-700">* {invalidField.email}</span>}
+                            <Input type="email" id="username" placeholder="example@gmail.com" aria-invalid={!!formState.errors.email} {...register("email", {
+                                required: "Please enter email !",
+                                pattern: {
+                                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                    message: "* Invalid email address !"
+                                }
+                            })}></Input>
+                            {formState.errors.email?.message && (
+                                <span className="text-xs text-red-700">* {formState.errors.email?.message}</span>
+                            )}
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="password" >Password</FieldLabel>
                             <div className=" relative">
-                                <Input type={isShowPass ? 'text' : 'password'} id="password" placeholder="********" aria-invalid={!!invalidField.password} value={password} onChange={(e) => {
-                                    setPassword(e.target.value);
-                                    setInvalidField({...invalidField, password: ""});
-                                }}></Input>
+                                <Input type={isShowPass ? 'text' : 'password'} id="password" placeholder="********" aria-invalid={!!formState.errors.password} {...register("password", {
+                                    required: "Please enter password !",
+                                    minLength: {
+                                        value: 8,
+                                        message: "Password must be atleast 8 character long !"
+                                    },
+                                    maxLength: {
+                                        value: 32,
+                                        message: "Password is too long !"
+                                    }
+                                })}></Input>
                                 <button className="cursor-pointer absolute right-1 bottom-1/5" type="button" onClick={() => setIsShowPass(!isShowPass)}>
                                     {isShowPass ? <FaEye/> : <FaEyeSlash/>}
                                 </button>
                             </div>
-                            {invalidField.password && <span className="text-xs text-red-700">* {invalidField.password}</span>}
+                            {formState.errors.password?.message && (
+                                <span className="text-xs text-red-700">{formState.errors.password?.message}</span>
+                            )}
                             {response && <span className="text-xs text-red-700">* {response}</span>}
                         </Field>
                         <Field orientation="vertical" className="items-center">

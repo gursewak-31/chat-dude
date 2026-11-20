@@ -6,43 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { signup } from "../api/auth-api";
 import useToken from "@/hook/useToken";
+import { useForm } from "react-hook-form";
+import type { SignupData } from "@/types/auth-types";
 
 export default function SignUp() {
     const [isShowPass, setIsShowPass] = useState(false);
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [invalidField, setInvalidField] = useState({ name: "", email: "", password: "" });
     const [response, setResponse] = useState("");
     const {setToken} = useToken();
     const redirect = useNavigate();
 
-    async function handleSignup(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        if (!validate()) return;
+    let { register, handleSubmit, formState } = useForm<SignupData>();
 
-        const res = await signup({name: name, email: email, password: password });
+    async function handleSignup(data: SignupData) {
+        const res = await signup(data);
+
         if (res.success) {
             setToken(res.accessToken)
             redirect("/");
             return;
         }
-        setResponse(res.msg);
-    }
 
-    function validate() {
-        const errors = { name: "", email: "", password: "" };
-        if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
-            errors.name = "Name should contain only letters.";
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            errors.email = "Please enter a valid email address.";
-        }
-        if (!/^.{8,32}$/.test(password.trim())) {
-            errors.password = "Password must be 8 to 32 characters long.";
-        }
-        setInvalidField(errors);
-        return !errors.name && !errors.email && !errors.password;
+        setResponse(res.msg);
     }
 
     useEffect(() => {
@@ -58,38 +42,53 @@ export default function SignUp() {
                     <h2 className="font-bold">Create an Account</h2>
                 </div>
 
-                <form onSubmit={handleSignup}>
+                <form onSubmit={handleSubmit(handleSignup)}>
                     <FieldGroup>
                         <Field>
                             <FieldLabel htmlFor="name">Name</FieldLabel>
-                            <Input id="name" type="text" autoComplete="name" placeholder="Your name" value={name} aria-invalid={!!invalidField.name} onChange={(event) => {
-                                setName(event.target.value);
-                                setInvalidField((prev) => ({ ...prev, name: "" }));
-                            }} />
-                            {invalidField.name && <span className="text-xs text-destructive">* {invalidField.name}</span>}
+                            <Input id="name" type="text" autoComplete="name" placeholder="Your name" aria-invalid={!!formState.errors.name} {...register("name", {
+                                required: "Please enter your name !"
+                            })}/>
+                            {formState.errors.name?.message && (
+                                <span className="text-xs text-destructive">* {formState.errors.name?.message}</span>
+                            )}
                         </Field>
 
                         <Field>
                             <FieldLabel htmlFor="email">Email</FieldLabel>
-                            <Input id="email" type="email" autoComplete="email" placeholder="example@gmail.com" value={email} aria-invalid={!!invalidField.email} onChange={(event) => {
-                                setEmail(event.target.value);
-                                setInvalidField((prev) => ({ ...prev, email: "" }));
-                            }} />
-                            {invalidField.email && <span className="text-xs text-destructive">* {invalidField.email}</span>}
+                            <Input id="email" type="email" autoComplete="email" placeholder="example@gmail.com" aria-invalid={!!formState.errors.email} {...register("email", {
+                                required: "Please enter email !",
+                                pattern: {
+                                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                    message: "Invalid email address !"
+                                }
+                            })} />
+                            {formState.errors.email?.message && (
+                                <span className="text-xs text-destructive">* {formState.errors.email?.message}</span>
+                            )}
                         </Field>
 
                         <Field>
                             <FieldLabel htmlFor="password">Password</FieldLabel>
                             <div className="relative">
-                                <Input id="password" type={isShowPass ? "text" : "password"} autoComplete="new-password" placeholder="At least 8 characters" value={password} aria-invalid={!!invalidField.password} onChange={(event) => {
-                                    setPassword(event.target.value);
-                                    setInvalidField((prev) => ({ ...prev, password: "" }));
-                                }} />
+                                <Input id="password" type={isShowPass ? "text" : "password"} autoComplete="new-password" placeholder="At least 8 characters" aria-invalid={!!formState.errors.password} {...register("password", {
+                                    required: "Please enter password !",
+                                    minLength: {
+                                        value: 8,
+                                        message: "Please enter atleast 8 character long !"
+                                    },
+                                    maxLength: {
+                                        value: 32,
+                                        message: "Password is too long !"
+                                    }
+                                })} />
                                 <button className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer" type="button" aria-label={isShowPass ? "Hide password" : "Show password"} onClick={() => setIsShowPass((shown) => !shown)}>
                                     {isShowPass ? <FaEye /> : <FaEyeSlash />}
                                 </button>
                             </div>
-                            {invalidField.password && <span className="text-xs text-destructive">* {invalidField.password}</span>}
+                            {formState.errors.password?.message && (
+                                <span className="text-xs text-destructive">* {formState.errors.password?.message}</span>
+                            )}
                         </Field>
 
                         {response && <span role="alert" className="px-2 text-xs text-destructive">* {response}</span>}
