@@ -1,5 +1,4 @@
 import type { SignupUser, LoginUser } from "../types/auth-types.js";
-import { validateSignup, validateLogin } from "../utils/auth-utils.js";
 import * as dbActions from "../database/auth-db-actions.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -11,11 +10,6 @@ dotenv.config();
 const AccessSecret = process.env.JWT_ACCESS_SECRET;
 
 export async function signup(user: SignupUser){
-    let isValid = validateSignup(user);
-
-    if(!isValid){
-        throw new AppError("Invalid data. Please check your input.", 400);
-    }
 
     let existingUser = await dbActions.getUserByEmail(user.email);
 
@@ -31,11 +25,6 @@ export async function signup(user: SignupUser){
 }
 
 export async function login(user: LoginUser){
-    let isValid = validateLogin(user);
-
-    if(!isValid){
-        throw new AppError("Invalid data. Please check your input.", 400);
-    }
 
     let data = await dbActions.getUserByEmail(user.email);
 
