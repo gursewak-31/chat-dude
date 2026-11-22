@@ -85,13 +85,13 @@ try {
         await pool.query(
             `INSERT INTO messages (msg, sender_id, conversation_id)
              VALUES
-                ($1, $2, $4),
-                ($3, $5, $4),
-                ($6, $2, $4)`,
+                ($1, $2, $6),
+                ($3, $4, $6),
+                ($5, $2, $6)`,
             [
                 "Hey Jamie! Welcome to Chat-Dude.", alexId,
                 "Thanks, Alex! This is a great place to start.", jamieId,
-                "Glad you think so. Let's catch up soon!",
+                "Glad you think so. Let's catch up soon!", conversationId
             ],
         );
     }
