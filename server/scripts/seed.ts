@@ -4,7 +4,8 @@ import connectDB from "../src/database/connection.js";
 const demoPassword = "ChatDude123!";
 const demoUsers = [
     { name: "Alex Morgan", email: "alex@example.com" },
-    { name: "Jamie Lee", email: "jamie@example.com" }
+    { name: "Jamie Lee", email: "jamie@example.com" },
+    { name: "joy", email: "joy@example.com" }
 ];
 
 const pool = await connectDB();
@@ -99,6 +100,7 @@ try {
     console.log("Seed complete.");
     console.log(`Demo login: alex@example.com / ${demoPassword}`);
     console.log(`Demo login: jamie@example.com / ${demoPassword}`);
+    console.log(`Demo login: joy@example.com / ${demoPassword}`);
 } finally {
     await pool.end();
 }
