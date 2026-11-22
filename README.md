@@ -53,7 +53,14 @@ The application expects a PostgreSQL schema containing these tables and columns:
 - `messages`: `id`, `msg`, `sender_id`, `conversation_id`, `created_at`
 - `refresh_tokens`: `id`, `user_id`, `token`, `created_at`, `expire_at`, `revoked_at`
 
-The repository does not currently include a schema or migration file, so create the database and tables before starting the server. Use integer-compatible IDs for users and conversations; message and conversation membership queries rely on these relationships.
+The PostgreSQL schema is in `server/database/schema.sql`. Create the `chat_dude` database configured in `server/.env`, then apply the schema from the project root:
+
+```bash
+psql -U postgres -c "CREATE DATABASE chat_dude;"
+psql -U postgres -d chat_dude -f server/database/schema.sql
+```
+
+To add two demo accounts and a sample conversation, run `npm run seed` from `server`. Both demo accounts use the password `ChatDude123!`: `alex@example.com` and `jamie@example.com`. The seed can be run more than once without duplicating its demo conversation or messages.
 
 For local development, the templates use the client origin `http://localhost:5173` and server port `3001`. Set `VITE_API_URL` to the server's HTTP origin and `VITE_WS_URL` to its WebSocket origin. If you change the server host or port, update both client values to match. The access-token secret is `JWT_ACCESS_SECRET`; refresh tokens are random values stored hashed in the database, so there is no separate refresh-token signing secret.
 
