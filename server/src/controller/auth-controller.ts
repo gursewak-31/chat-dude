@@ -10,12 +10,7 @@ export async function signup(req: Request, res: Response, next: NextFunction){
 
         await authService.insertRefreshToken(userId, refreshToken);
 
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            sameSite: "lax",
-            maxAge: 24 * 60 * 60 * 1000,
-            path: "/auth" // means the browser only sends the refresh cookie to matching authentication routes, rather than every endpoint
-        });
+        setRefreshTokenCookie(res, refreshToken);
         res.status(200).json({success: true, msg: "User created successfully.", accessToken: accessToken});
     } catch (error) {
         next(error);
@@ -31,12 +26,7 @@ export async function login(req: Request, res: Response, next: NextFunction){
 
         await authService.insertRefreshToken(userId, refreshToken);
 
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            sameSite: "lax",
-            maxAge: 24 * 60 * 60 * 1000,
-            path: "/auth" // means the browser only sends the refresh cookie to matching authentication routes, rather than every endpoint
-        });
+        setRefreshTokenCookie(res, refreshToken);
         res.status(200).json({success: true, msg: "User logged in successfully.", accessToken: accessToken});
     } catch (error) {
         next(error);
@@ -61,7 +51,8 @@ export async function logout(req: Request, res: Response, next: NextFunction){
 
         res.clearCookie("refreshToken", {
             httpOnly: true,
-            sameSite: "lax",
+            sameSite: "none",
+            secure: true,
             path: "/auth"
         });
         res.status(200).json({success: true});
@@ -80,14 +71,20 @@ export async function refresh(req: Request, res: Response, next: NextFunction){
 
         await authService.rotateRefreshToken(userId, oldRefreshToken, newRefreshToken);
 
-        res.cookie("refreshToken", newRefreshToken, {
-            httpOnly: true,
-            sameSite: "lax",
-            maxAge: 24 * 60 * 60 * 1000,
-            path: "/auth" // means the browser only sends the refresh cookie to matching authentication routes, rather than every endpoint
-        });
+        setRefreshTokenCookie(res, newRefreshToken);
         res.status(200).json({success: true, accessToken: newAccessToken});
     }catch(error){
         next(error);
     }
+}
+
+
+function setRefreshTokenCookie(res: Response, refreshToken: string){
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        path: "/auth" // means the browser only sends the refresh cookie to matching authentication routes, rather than every endpoint
+    });
 }
