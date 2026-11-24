@@ -45,8 +45,8 @@ export default function Login() {
     }, [response]);
 
     return(
-        <div className="dark flex h-screen w-auto items-center justify-center bg-background text-primary">
-            <div className="md:w-1/3 sm:w-1/2 w-full rounded-2xl bg-card border border-secondry p-3">
+        <div className="dark flex min-h-dvh w-full items-center justify-center bg-background px-4 py-8 text-primary sm:px-6">
+            <div className="w-full max-w-md rounded-2xl border border-secondry bg-card p-4 sm:p-6">
                 <div className="w-full p-2 text-center">
                     <h2 className="font-bold">Welcome</h2>
                 </div>

@@ -11,7 +11,7 @@ import { logout, refresh } from "@/api/auth-api";
 import { useNavigate } from "react-router-dom";
 import type { Conversation, NewMsgNotification, Chat } from "@/types/app-types";
 import type { User } from "@/types/app-types";
-import { FaComments, FaUserPlus } from 'react-icons/fa6';
+import { FaComments, FaUserPlus, FaArrowLeft } from 'react-icons/fa6';
 import { HiUsers } from "react-icons/hi"
 import { MdDownloadDone } from "react-icons/md";
 import useToken from "@/hook/useToken";
@@ -24,6 +24,7 @@ export default function Home() {
     let [tab, setTab] = useState<"connections" | "users">("connections");
     let [connections, setConnections] = useState<Conversation[] | null>(null); // holds all conversations of user
     let [selectedConn, setSelectedConn] = useState<Conversation | null>(null);
+    let [mobileShowChat, setMobileShowChat] = useState(false);
     let [users, setUsers] = useState<User[] | null>(null); // holds all users who are not in conversation with user
     let [addConnectionState, setAddConnectionState] = useState<{[id: string]: "not added" | "adding" | "added"}>({});
     
@@ -152,10 +153,10 @@ export default function Home() {
     }, [tab]);
 
     return(
-        <div className="dark bg-background w-screen h-screen text-primary">
-          <div className="bg-card flex gap-2 h-full">
-            <div className="w-1/4 h-full flex gap-2 p-3">
-              <div className="w-1/6 h-full">
+        <div className="dark h-dvh w-full overflow-hidden bg-background text-primary">
+          <div className="flex h-full gap-2 bg-card p-2 sm:p-3">
+            <div className={`${mobileShowChat ? "hidden" : "flex"} h-full w-full gap-2 md:flex md:w-[340px] md:shrink-0`}>
+              <div className="h-full w-12 shrink-0 sm:w-14">
                 <Tabs orientation="vertical" className={"w-full"}>
                   <TabsList className="h-full w-full">
                     <TabsTrigger value={"connections"} onClick={() => setTab("connections")} ><FaComments size={24} /></TabsTrigger>
@@ -163,16 +164,16 @@ export default function Home() {
                   </TabsList>
                 </Tabs>
               </div>
-              <div className="flex-1 flex flex-col justify-between">
+              <div className="flex min-w-0 flex-1 flex-col justify-between overflow-hidden">
                 {tab == "connections" ? (
-                  <Tabs defaultValue={""} orientation="vertical" className={"w-full"}>
-                    <TabsList className={"w-full"}>
+                  <Tabs defaultValue={""} orientation="vertical" className={"w-full min-h-0 flex-1 overflow-y-auto"}>
+                    <TabsList className={"w-full flex-col items-stretch"}>
                       {connections ? connections.map((con, idx) => (
-                        <TabsTrigger key={con.id} value={con.id} onClick={() => setSelectedConn(con)} data-active={selectedConn?.id == con.id}>
+                        <TabsTrigger key={con.id} value={con.id} onClick={() => { setSelectedConn(con); setMobileShowChat(true); }} data-active={selectedConn?.id == con.id} className="min-w-0 justify-start">
                           <Avatar>
                             <AvatarFallback>{con.name[0]?.toUpperCase()}</AvatarFallback>
                           </Avatar>
-                          {con.name} 
+                          <span className="truncate">{con.name}</span>
                           {/* {user?.id == con.id && '(self)'}  */}
                           {msgNotification.find((info) => info.senderid == con.id) && (<span className="text-white">•</span>)}
                         </TabsTrigger>
@@ -180,15 +181,15 @@ export default function Home() {
                     </TabsList>
                   </Tabs>
                 ) : (
-                  <div className="w-full">
-                    <div className="h-full w-full bg-accent rounded-md">
+                  <div className="w-full min-h-0 flex-1 overflow-y-auto">
+                    <div className="w-full rounded-md bg-accent">
                       {users?.map((user) => (
-                        <div key={user.id} className="flex items-center justify-between rounded-md px-1.5 py-1 text-sm font-medium text-gray-400 transition-colors hover:bg-accent hover:text-accent-foreground">
-                          <div className="flex items-center gap-2">
+                        <div key={user.id} className="flex min-w-0 items-center justify-between gap-2 rounded-md px-1.5 py-1 text-sm font-medium text-gray-400 transition-colors hover:bg-accent hover:text-accent-foreground">
+                          <div className="flex min-w-0 items-center gap-2">
                             <Avatar>
                               <AvatarFallback>{user.name[0]?.toUpperCase()}</AvatarFallback>
                             </Avatar>
-                            <span>{user.name}</span>
+                            <span className="truncate">{user.name}</span>
                           </div>
 
                           <Button variant={"ghost"} onClick={() => handleAddConnection(user.id)} disabled={addConnectionState[user.id] == "adding" || addConnectionState[user.id] == "added"}>
@@ -206,14 +207,14 @@ export default function Home() {
                 </div>
                 )}
 
-                <div className="p-2 flex gap-2 items-center rounded-2xl bg-accent">
+                <div className="flex items-center gap-2 rounded-2xl bg-accent p-2">
                   <Avatar>
                     <AvatarFallback>{user?.name[0]?.toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 flex justify-between items-center">
-                    <div className="text-sm">
-                      <p>{user?.name}</p>
-                      <span className="text-xs text-gray-500">{user?.email}</span>
+                    <div className="min-w-0 text-sm">
+                      <p className="truncate">{user?.name}</p>
+                      <span className="block truncate text-xs text-gray-500">{user?.email}</span>
                     </div>
                     <div>
                       <Button variant={"outline"} onClick={handleLogout}>Log out</Button>
@@ -223,15 +224,27 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex-1 border rounded-2xl flex flex-col p-1">
-              <div className="flex-1 p-2 overflow-auto min-h-0">
+            <div className={`${mobileShowChat ? "flex" : "hidden"} min-w-0 flex-1 flex-col rounded-2xl border p-1 md:flex`}>
+              <div className="flex items-center gap-2 border-b px-2 py-2 md:hidden">
+                <Button variant="ghost" size="sm" className="bg-accent" onClick={() => setMobileShowChat(false)}>
+                  <FaArrowLeft />
+                </Button>
+                <Avatar>
+                  <AvatarFallback>{selectedConn?.name[0]?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <span className="truncate font-medium">{selectedConn?.name ?? "Chat"}</span>
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-2">
+                <div className="min-h-0 flex-1 overflow-y-auto">
                 {chatHistory.map((msg) => (
                   <RenderChat chat={msg} selectedConn={selectedConn} user={user} key={msg.id} />
                 ))}
-              </div>
-              <div className="flex gap-2 items-center">
-                <Textarea placeholder="write a message..." value={msg} onChange={(e) => setMsg(e.target.value)}></Textarea>
-                <Button onClick={sendMessage}>Send</Button>
+                {!selectedConn && <p className="flex h-full items-center justify-center text-center text-sm text-muted-foreground">Choose a conversation to start chatting.</p>}
+                </div>
+                <div className="flex shrink-0 items-end gap-2">
+                  <Textarea className="min-h-11 max-h-32 flex-1 resize-y" placeholder="Write a message..." value={msg} onChange={(e) => setMsg(e.target.value)}></Textarea>
+                  <Button onClick={sendMessage}>Send</Button>
+                </div>
               </div>
             </div>
           </div>
