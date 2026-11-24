@@ -79,7 +79,7 @@ export default function Home() {
       newSocketObj.onmessage = (e) => {
         try {
           const res = JSON.parse(e.data);
-          if(res.type == "new_message"){
+          if(res.type == "NEW_MESSAGE"){
             // append new message to chat if sender is selected connection, else append to new message notification
             if(res.msgInfo.conversation_id == selectedConnRef.current?.id){
               setChatHistory(prevChat => [...prevChat, res.msgInfo]);
