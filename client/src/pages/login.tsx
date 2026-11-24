@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field"
 import { Link, useNavigate } from "react-router" 
-import React, { useEffect, useState, type FormEvent } from "react";
+import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { login } from "../api/auth-api";
 import useToken from "@/hook/useToken";
@@ -14,11 +14,20 @@ export default function Login() {
     let [response, setResponse] = useState("");
     let {setToken} = useToken();
     let redirect = useNavigate();
+    let isRequesting = useRef(false);
+    let [loading, setLoading] = useState(false);
 
     let { register, handleSubmit, formState } = useForm<LoginData>();
 
     async function handleLogin(data: LoginData){
+        if (isRequesting.current) return; // prevent multiple requests before the first one is completed
+        isRequesting.current = true;
+        setLoading(true);
+
         let res = await login(data);
+
+        isRequesting.current = false;
+        setLoading(false);
 
         if(res.success){
             setToken(res.accessToken);
@@ -82,7 +91,9 @@ export default function Login() {
                         </Field>
                         <Field orientation="vertical" className="items-center">
                             <div className="flex w-full items-center justify-center">
-                                <Button type="submit">Login</Button>
+                                <Button type="submit" disabled={loading}>
+                                    {loading ? 'Logging in...' : 'Login'}
+                                </Button>
                             </div>
                             <p className="text-center text-sm text-muted-foreground">Don't have account? <Link to="/signup" className="text-primary underline-offset-4 hover:underline">signup</Link></p>
                         </Field>

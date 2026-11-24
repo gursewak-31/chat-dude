@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,20 @@ export default function SignUp() {
     const [response, setResponse] = useState("");
     const {setToken} = useToken();
     const redirect = useNavigate();
+    const isRequesting = useRef(false);
+    const [loading, setLoading] = useState(false);
 
     let { register, handleSubmit, formState } = useForm<SignupData>();
 
     async function handleSignup(data: SignupData) {
+        if (isRequesting.current) return; // prevent multiple requests before the first one is completed
+        isRequesting.current = true;
+        setLoading(true);
+
         const res = await signup(data);
+
+        isRequesting.current = false;
+        setLoading(false);
 
         if (res.success) {
             setToken(res.accessToken)
@@ -95,7 +104,9 @@ export default function SignUp() {
 
                         <Field className="items-center justify-center">
                             <div className="flex w-full items-center justify-center">
-                                <Button type="submit">Sign up</Button>
+                                <Button type="submit" disabled={loading}>
+                                    {loading ? 'Signing up...' : 'Sign up'}
+                                </Button>
                             </div>
                             <p className="text-center text-sm text-muted-foreground">Already have an account? <Link to="/login" className="text-primary underline-offset-4 hover:underline">Login</Link></p>
                         </Field>
