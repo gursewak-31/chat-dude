@@ -53,14 +53,14 @@ The application expects a PostgreSQL schema containing these tables and columns:
 - `messages`: `id`, `msg`, `sender_id`, `conversation_id`, `created_at`
 - `refresh_tokens`: `id`, `user_id`, `token`, `created_at`, `expire_at`, `revoked_at`
 
-The PostgreSQL schema is in `server/database/schema.sql`. Create the `chat_dude` database configured in `server/.env`, then apply the schema from the project root:
+The PostgreSQL schema is included at `server/database/schema.sql`. Create the database named by `DB_NAME` in `server/.env` (the example uses `chat_dude`), then apply the schema. With the example database name and a local PostgreSQL user named `postgres`, run these commands from the project root:
 
 ```bash
 psql -U postgres -c "CREATE DATABASE chat_dude;"
 psql -U postgres -d chat_dude -f server/database/schema.sql
 ```
 
-To add two demo accounts and a sample conversation, run `npm run seed` from `server`. Both demo accounts use the password `ChatDude123!`: `alex@example.com` and `jamie@example.com`. The seed can be run more than once without duplicating its demo conversation or messages.
+To add three demo accounts and a sample conversation between Alex and Jamie, run `npm run seed` from `server`. All three demo accounts use the password `ChatDude123!`: `alex@example.com`, `jamie@example.com`, and `joy@example.com`. The seed can be run more than once without duplicating its demo conversation or sample messages. Use these credentials only for local development.
 
 For local development, the templates use the client origin `http://localhost:5173` and server port `3001`. Set `VITE_API_URL` to the server's HTTP origin and `VITE_WS_URL` to its WebSocket origin. If you change the server host or port, update both client values to match. The access-token secret is `JWT_ACCESS_SECRET`; refresh tokens are random values stored hashed in the database, so there is no separate refresh-token signing secret.
 
@@ -130,5 +130,5 @@ The WebSocket endpoint is configured by `VITE_WS_URL` (for example, `ws://localh
 
 - The sample environment is configured for local development. The server port and allowed client origin are configurable; set the client API and WebSocket URLs to match your deployment.
 - Conversations are one-to-one; group chats, file uploads, and deployment configuration are not included.
-- Database setup is manual because schema migrations are not included yet.
+- The included schema must be applied manually; automated migrations are not included.
 
