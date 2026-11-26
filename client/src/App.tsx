@@ -7,6 +7,7 @@ import ProtectedRoutes from "./components/page/protected-route";
 import { Routes, Route } from "react-router";
 import UserProvider from "./context/user-context";
 import TokenProvider from "./context/token-context";
+import PublicRoutes from "./components/page/public-route";
 
 function App() {
 
@@ -15,8 +16,10 @@ function App() {
       <UserProvider>
         <TokenProvider>
           <Routes>
-            <Route path="/login" element={<Login />}></Route>
-            <Route path="/signup" element={<SignUp />}></Route>
+            <Route element={<PublicRoutes/>} >
+              <Route path="/login" element={<Login />}></Route>
+              <Route path="/signup" element={<SignUp />}></Route>
+            </Route>
             <Route element={<ProtectedRoutes/>}>
               <Route path="/" element={<Home/>}></Route>
             </Route>
